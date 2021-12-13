@@ -62,12 +62,30 @@ class termGrapher():
             assert all(isinstance(v, (int, float)) for v in x) and all(isinstance(v, (int, float)) for v in y), "Lists contain invalid values"
         else:
             raise TypeError("Invalid data type values given")
+        umap = lambda n, il, ih, fl, fh: fl + ((n - il) / (ih - il)) * (fh - fl)
         for ind in range(len(x) - 1):
-            col1 = int(((x[ind] - figure.lx) / (figure.hx - figure.lx)) * (figure.cols - 1))
-            row1 = int(((y[ind] - figure.hy) / (figure.ly - figure.hy)) * (figure.rows - 1))
-            col2 = int(((x[ind + 1] - figure.lx) / (figure.hx - figure.lx)) * (figure.cols - 1))
-            row2 = int(((y[ind + 1] - figure.hy) / (figure.ly - figure.hy)) * (figure.rows - 1))
-            # Implement DDA for line joining
+            row1 = int(umap(y[ind], figure.hy, figure.ly, 0, figure.rows - 1))
+            col1 = int(umap(x[ind], figure.lx, figure.hx, 0, figure.cols - 1))
+            row2 = int(umap(y[ind + 1], figure.hy, figure.ly, 0, figure.rows - 1))
+            col2 = int(umap(x[ind + 1], figure.lx, figure.hx, 0, figure.cols - 1))
+            ipoints = self._getddapoints(row1, col1, row2, col2)
+            for row, col in ipoints:
+                if(col >= 0 and col < figure.cols and row >= 0 and row < figure.rows):
+                    figure.data[row, col] = 1
+
+    def _autorange(self, a, b):
+        return range(a, b + 1) if (a < b) else range(a, b - 1, -1)
+    
+    def _getddapoints(self, x0, y0, x1, y1):
+        points = []
+        umap = lambda n, il, ih, fl, fh: fl + ((n - il) / (ih - il)) * (fh - fl)
+        if(abs(x0 - x1) >= abs(y0 - y1)):
+            for x in self._autorange(x0, x1):
+                points.append([x, int(umap(x, x0, x1, y0, y1))])
+        else:
+            for y in self._autorange(y0, y1):
+                points.append([int(umap(y, y0, y1, x0, x1)), y])
+        return points
     
     def scatter(self, x, y, figure=None):
         if figure is None:
@@ -86,9 +104,10 @@ class termGrapher():
             assert all(isinstance(v, (int, float)) for v in x) and all(isinstance(v, (int, float)) for v in y), "Lists contain invalid values"
         else:
             raise TypeError("Invalid data type values given")
+        umap = lambda n, il, ih, fl, fh: fl + ((n - il) / (ih - il)) * (fh - fl)
         for ind, item in enumerate(x):
-            col = int(((x[ind] - figure.lx) / (figure.hx - figure.lx)) * (figure.cols - 1))
-            row = int(((y[ind] - figure.hy) / (figure.ly - figure.hy)) * (figure.rows - 1))
+            row = int(umap(y[ind], figure.hy, figure.ly, 0, figure.rows - 1))
+            col = int(umap(x[ind], figure.lx, figure.hx, 0, figure.cols - 1))
             if(col >= 0 and col < figure.cols and row >= 0 and row < figure.rows):
                 figure.data[row, col] = 1
 
@@ -149,11 +168,3 @@ class termGrapher():
     def _loadJSON(self, path):
         with open(path, 'r') as f:
             return json.load(f)
-
-if __name__ == "__main__":
-    tg = termGrapher()
-    fig = tg.new(40, 40, -5, 5, -25, 25)
-    tg.graph(lambda x, y: y)
-    tg.graph(lambda x, y: 0.2 * y - np.sin(x))
-    tg.show(fig)
-

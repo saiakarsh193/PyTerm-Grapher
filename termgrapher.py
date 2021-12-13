@@ -68,6 +68,10 @@ class termGrapher():
             col1 = int(umap(x[ind], figure.lx, figure.hx, 0, figure.cols - 1))
             row2 = int(umap(y[ind + 1], figure.hy, figure.ly, 0, figure.rows - 1))
             col2 = int(umap(x[ind + 1], figure.lx, figure.hx, 0, figure.cols - 1))
+            if(row1 == row2 and col1 == col2):
+                if(col1 >= 0 and col1 < figure.cols and row1 >= 0 and row1 < figure.rows):
+                    figure.data[row1, col1] = 1
+                continue
             ipoints = self._getddapoints(row1, col1, row2, col2)
             for row, col in ipoints:
                 if(col >= 0 and col < figure.cols and row >= 0 and row < figure.rows):
